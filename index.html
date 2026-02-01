@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>xoo ❤️ Valentine?</title>
+  <style>
+    :root{
+      --bg1:#fff1f6;
+      --bg2:#ffe8f1;
+      --ink:#2b2b2b;
+      --pink:#ff4d88;
+      --pink2:#ff77a8;
+      --card:#ffffffcc;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 700px at 20% 20%, var(--bg1), transparent 60%),
+        radial-gradient(1000px 600px at 80% 30%, var(--bg2), transparent 55%),
+        linear-gradient(160deg, #fff, #ffeef6);
+      overflow:hidden;
+    }
+    .card{
+      width:min(520px, 92vw);
+      padding:28px 26px 24px;
+      border-radius:22px;
+      background:var(--card);
+      backdrop-filter: blur(10px);
+      border:1px solid #ffffff80;
+      box-shadow: 0 20px 60px #ff6aa01f, 0 10px 25px #00000010;
+      position:relative;
+    }
+    h1{
+      margin:0 0 10px;
+      font-size: clamp(26px, 4vw, 34px);
+      letter-spacing:-0.5px;
+      text-align:center;
+    }
+    p{
+      margin:0 0 18px;
+      text-align:center;
+      opacity:0.8;
+      font-size: 14.5px;
+    }
+    .stage{
+      position:relative;
+      height:170px;
+      border-radius:18px;
+      background:linear-gradient(180deg, #ffffffb0, #ffffff70);
+      border:1px dashed #ff9cbb70;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .btn{
+      position:absolute;
+      padding:12px 18px;
+      border-radius:999px;
+      border:none;
+      font-weight:700;
+      cursor:pointer;
+      transition: transform .12s ease, box-shadow .12s ease, left .12s ease, top .12s ease;
+      box-shadow: 0 10px 20px #ff2f6a20;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    .btn:active{ transform: scale(0.98); }
+
+    #yes{
+      background: linear-gradient(135deg, var(--pink), var(--pink2));
+      color:white;
+    }
+    #no{
+      background:#fff;
+      color:#444;
+      border:1px solid #ff8fb1a0;
+      box-shadow: 0 10px 20px #00000008;
+    }
+
+    .result{
+      display:none;
+      text-align:center;
+      padding:18px 10px 6px;
+    }
+    .yay{
+      font-size: clamp(34px, 6vw, 46px);
+      margin:6px 0 10px;
+      color: var(--pink);
+      text-shadow: 0 10px 25px #ff2f6a2a;
+    }
+    .hearts{
+      font-size: 20px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    /* floating tiny hearts background */
+    .float-heart{
+      position:absolute;
+      bottom:-20px;
+      font-size: 18px;
+      opacity:0.65;
+      animation: rise 3.8s linear forwards;
+      pointer-events:none;
+      filter: drop-shadow(0 6px 10px #ff2f6a1a);
+    }
+    @keyframes rise{
+      0%{ transform: translateY(0) translateX(0) rotate(0deg); opacity:0;}
+      10%{opacity:.75}
+      100%{ transform: translateY(-120vh) translateX(var(--drift)) rotate(25deg); opacity:0;}
+    }
+
+    .small{
+      margin-top:10px;
+      text-align:center;
+      font-size:12.5px;
+      opacity:.65;
+    }
+
+    a.fakeLink {
+      display:inline-block;
+      margin-top:12px;
+      text-decoration:none;
+      font-weight:700;
+      color:#ff3e7f;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <h1>xoo will you be my valentine? 💘</h1>
+    <p>Choose wisely… (the buttons might be a little mischievous 😇)</p>
+
+    <div class="stage" id="stage" aria-label="valentine stage">
+      <button class="btn" id="yes" aria-label="Yes button">Yes 💖</button>
+      <button class="btn" id="no" aria-label="No button">No 🙃</button>
+    </div>
+
+    <div class="result" id="result">
+      <div class="yay">yay!</div>
+      <div class="hearts" id="hearts"></div>
+      <a class="fakeLink" href="#" id="replay">replay ♡</a>
+    </div>
+
+    <div class="small">Tip: if you’re on mobile, try tapping quickly 😌</div>
+  </div>
+
+<script>
+(() => {
+  const stage = document.getElementById('stage');
+  const yes = document.getElementById('yes');
+  const no  = document.getElementById('no');
+  const result = document.getElementById('result');
+  const heartsEl = document.getElementById('hearts');
+  const replay = document.getElementById('replay');
+
+  // Place buttons initially
+  function placeButtons() {
+    const r = stage.getBoundingClientRect();
+    const pad = 12;
+
+    // keep them comfortably apart
+    const yesPos = { x: r.width * 0.28, y: r.height * 0.55 };
+    const noPos  = { x: r.width * 0.65, y: r.height * 0.55 };
+
+    setBtnAt(yes, yesPos.x, yesPos.y);
+    setBtnAt(no,  noPos.x,  noPos.y);
+  }
+
+  function setBtnAt(btn, x, y) {
+    // center align around x,y
+    const bw = btn.offsetWidth || 90;
+    const bh = btn.offsetHeight || 42;
+    btn.style.left = Math.max(8, Math.min(stage.clientWidth - bw - 8, x - bw/2)) + 'px';
+    btn.style.top  = Math.max(8, Math.min(stage.clientHeight - bh - 8, y - bh/2)) + 'px';
+  }
+
+  // Randomly relocate a button within stage bounds
+  function moveButton(btn) {
+    const bw = btn.offsetWidth;
+    const bh = btn.offsetHeight;
+    const x = 10 + Math.random() * (stage.clientWidth - bw - 20);
+    const y = 10 + Math.random() * (stage.clientHeight - bh - 20);
+    btn.style.left = x + 'px';
+    btn.style.top = y + 'px';
+    btn.style.transform = 'translateZ(0) scale(1.03)';
+    setTimeout(() => btn.style.transform = 'translateZ(0) scale(1)', 120);
+  }
+
+  // ~50% challenge: sometimes Yes dodges your cursor/finger
+  // plus occasional swap with No for extra mischief.
+  let dodgeEnabled = true;
+
+  function shouldDodge() {
+    return dodgeEnabled && Math.random() < 0.5; // 50%
+  }
+
+  // Desktop hover: dodge sometimes
+  yes.addEventListener('mouseenter', () => {
+    if (shouldDodge()) moveButton(yes);
+    // occasionally swap positions with No (smaller chance)
+    if (dodgeEnabled && Math.random() < 0.18) {
+      const yesL = yes.style.left, yesT = yes.style.top;
+      yes.style.left = no.style.left; yes.style.top = no.style.top;
+      no.style.left = yesL; no.style.top = yesT;
+    }
+  });
+
+  // Mobile touchstart: dodge sometimes (but not always so it remains clickable)
+  yes.addEventListener('touchstart', (e) => {
+    if (shouldDodge()) {
+      e.preventDefault(); // prevent immediate click if it dodges
+      moveButton(yes);
+    }
+  }, { passive:false });
+
+  // No button: gently runs away when you try to click it (funny, but doesn't block Yes)
+  no.addEventListener('mouseenter', () => {
+    if (Math.random() < 0.35) moveButton(no);
+  });
+  no.addEventListener('touchstart', (e) => {
+    if (Math.random() < 0.25) {
+      e.preventDefault();
+      moveButton(no);
+    }
+  }, { passive:false });
+
+  // YES clicked → yay + hearts + floating hearts; stop dodging
+  yes.addEventListener('click', () => {
+    dodgeEnabled = false;
+
+    stage.style.display = 'none';
+    result.style.display = 'block';
+
+    // Print a bunch of hearts (cute wall)
+    const lines = 7;
+    const perLine = 18;
+    const heartChoices = ["💖","💘","💕","💗","💓","💞","❤️","🩷"];
+    let out = "";
+    for (let i = 0; i < lines; i++) {
+      let line = "";
+      for (let j = 0; j < perLine; j++) {
+        line += heartChoices[Math.floor(Math.random()*heartChoices.length)];
+      }
+      out += line + (i < lines-1 ? "\n" : "");
+    }
+    heartsEl.textContent = out;
+
+    // Burst floating hearts animation
+    burstHearts(42);
+  });
+
+  // Replay resets
+  replay.addEventListener('click', (e) => {
+    e.preventDefault();
+    stage.style.display = 'flex';
+    result.style.display = 'none';
+    dodgeEnabled = true;
+    placeButtons();
+  });
+
+  // Floating hearts generator
+  function burstHearts(n){
+    const card = document.getElementById('card');
+    const heartChoices = ["💖","💘","💕","💗","💓","💞","❤️","🩷"];
+    for(let i=0;i<n;i++){
+      const h = document.createElement('div');
+      h.className = 'float-heart';
+      h.textContent = heartChoices[Math.floor(Math.random()*heartChoices.length)];
+      h.style.left = (Math.random()*100) + '%';
+      h.style.animationDuration = (2.8 + Math.random()*2.4) + 's';
+      h.style.setProperty('--drift', (Math.random()*120 - 60) + 'px');
+      h.style.fontSize = (14 + Math.random()*18) + 'px';
+      h.style.opacity = (0.35 + Math.random()*0.55).toFixed(2);
+      card.appendChild(h);
+      setTimeout(() => h.remove(), 5500);
+    }
+  }
+
+  // Initial layout
+  // Wait a tick so offsets are measurable
+  window.addEventListener('load', () => {
+    placeButtons();
+    // slight ambient hearts on load
+    setTimeout(() => burstHearts(10), 250);
+  });
+  window.addEventListener('resize', placeButtons);
+})();
+</script>
+</body>
+</html>
